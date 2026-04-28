@@ -1,12 +1,14 @@
 # ☁️ AWS Cloud Architecture Labs
 
+---
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Lab 1 — AWS Well-Architected Tool](#lab-1--aws-well-architected-tool)
+- [Part 1 — AWS Well-Architected Tool](#part-1--aws-well-architected-tool)
   - [What We Did](#what-we-did)
   - [Key Concepts & Best Practices](#key-concepts--best-practices)
-- [Lab 2 — Highly Available Web Application](#lab-2--highly-available-web-application)
+- [Part 2 — Highly Available Web Application](#part-2--highly-available-web-application)
   - [Architecture Overview](#architecture-overview)
   - [What We Built](#what-we-built)
   - [Chaos Engineering with AWS FIS](#chaos-engineering-with-aws-fis)
@@ -17,19 +19,19 @@
 
 ## Overview
 
-This repository documents two completed AWS hands-on labs covering cloud architecture review methodology and the end-to-end construction of a production-grade, highly available web application. Both labs were completed in a provisioned AWS environment targeting the role of a **Solutions Architect**.
+This repository documents two AWS projects covering cloud architecture review methodology and the end-to-end construction of a production-grade, highly available web application — delivered from the perspective of a **Solutions Architect**.
 
-The first lab establishes the practice of evaluating architectures using the **AWS Well-Architected Framework**. The second lab puts that framework into action by building a real, multi-AZ WordPress deployment using Aurora, ElastiCache, EFS, an Application Load Balancer, and Auto Scaling — then stress-testing it with the **AWS Fault Injection Simulator**.
+The first project establishes the practice of evaluating architectures using the **AWS Well-Architected Framework**. The second puts that framework into action by building a real, multi-AZ WordPress deployment using Aurora, ElastiCache, EFS, an Application Load Balancer, and Auto Scaling — then stress-testing it with the **AWS Fault Injection Simulator**.
 
 ---
 
-## Lab 1 — AWS Well-Architected Tool
+## Part 1 — AWS Well-Architected Tool
 
 ### What We Did
 
 #### 1.1 — Workload Creation
 
-A workload named **"Workload for AnyCompany"** was defined in the AWS Well-Architected Tool, targeting a **Pre-production** environment in the lab's assigned region. The Well-Architected Framework lens was applied automatically.
+A workload named **"Workload for AnyCompany"** was defined in the AWS Well-Architected Tool, targeting a **Pre-production** environment. The Well-Architected Framework lens was applied to structure the review across all six pillars.
 
 ![Workload Creation](images/lab1-workload-creation.png)
 
@@ -89,8 +91,6 @@ The pillar priority was adjusted to place **Security at the top**, reflecting An
 
 ### Key Concepts & Best Practices
 
-> **Why we did it this way (lab constraints):** We only answered two questions before saving the milestone because the lab scope was limited. In a real review, the milestone would be saved only after completing all six pillars.
-
 **For your own future workloads:**
 
 - ✅ **Complete all pillars before the first milestone.** The first production milestone should reflect a full baseline review — all questions answered, all pillars evaluated. Partial reviews make risk comparisons across milestones unreliable.
@@ -98,11 +98,11 @@ The pillar priority was adjusted to place **Security at the top**, reflecting An
 - ✅ **Adjust pillar priority per workload type.** A fintech app should prioritize Security and Reliability. A batch analytics workload may prioritize Cost Optimization and Performance Efficiency. The tool supports this natively.
 - ✅ **Use the report to drive stakeholder conversations.** The generated PDF/HTML report is the right artifact to bring to architecture review boards, compliance teams, or leadership — it communicates risk quantitatively.
 - ✅ **Re-review on a cadence.** The Well-Architected Tool is not a one-time exercise. High-growth products should be reviewed every 6–12 months or after major architecture changes.
-- ✅ **Integrate InfoSec and Compliance teams early.** The high risks flagged in this lab (governance and compliance gaps) are exactly the kind of gaps that cause audit failures in production. Block their feedback into the first milestone before any workload goes live.
+- ✅ **Integrate InfoSec and Compliance teams early.** Governance and compliance gaps are exactly the kind of issues that cause audit failures in production. Their input should be captured before any workload goes live.
 
 ---
 
-## Lab 2 — Highly Available Web Application
+## Part 2 — Highly Available Web Application
 
 ### Architecture Overview
 
@@ -133,7 +133,7 @@ Amazon EFS   Amazon ElastiCache (Memcached) ── Amazon Aurora (Multi-AZ)
 
 #### 2.1 — Network Layer (CloudFormation)
 
-The VPC and all subnet/NAT gateway resources were provisioned using a pre-supplied **CloudFormation template** (`Task1StackPublic`). Two Availability Zones were used, each with a public subnet, an app subnet, and a database subnet. NAT Gateways in each public subnet allow the app servers to reach the internet for updates without being publicly reachable themselves.
+The VPC and all subnet/NAT gateway resources were provisioned using a **CloudFormation template**. Two Availability Zones were used, each with a public subnet, an app subnet, and a database subnet. NAT Gateways in each public subnet allow the app servers to reach the internet for updates without being publicly reachable themselves.
 
 > **Why CloudFormation?** Infrastructure-as-Code ensures the network is reproducible, version-controlled, and auditable. Manually clicking through VPC creation is error-prone and leaves no deployment record.
 
@@ -153,15 +153,12 @@ An **Aurora MySQL** DB cluster named `mydbcluster` was created with the followin
 | Subnet Group | `labdbsubnetgroup` (private DB subnets) |
 | Public Access | No |
 | Initial DB Name | `WPDatabase` |
-| Encryption | Disabled *(lab constraint)* |
 
 The Writer endpoint was captured and passed downstream to the WordPress configuration.
 
 ![Aurora DB Cluster](images/lab2-aurora-cluster.png)
 
-> **Why we disabled encryption (lab only):** Encryption was turned off to reduce provisioning time and avoid CMK management complexity in the lab environment.
->
-> **Best practice for your own workloads:** Always enable encryption at rest (AES-256 via AWS KMS) for any RDS/Aurora instance handling real data. Enable auto minor version upgrades and deletion protection in production — we disabled both here due to lab cleanup requirements.
+> **Best practice for your own workloads:** Always enable encryption at rest (AES-256 via AWS KMS) for any RDS/Aurora instance handling real data. Enable auto minor version upgrades and deletion protection in production to guard against unpatched vulnerabilities and accidental deletion.
 
 ---
 
@@ -171,7 +168,7 @@ An ElastiCache **Memcached** cluster named `MyWPCache` was deployed with 2 nodes
 
 ![ElastiCache Cluster](images/lab2-elasticache.png)
 
-> **Lab vs. best practice:** We used Memcached rather than Redis. **For your own workloads**, prefer **ElastiCache for Redis** if you need persistence, replication, pub/sub, or sorted sets. Memcached is simpler and marginally faster for pure object caching with no need for data recovery.
+> **Best practice for your own workloads:** Prefer **ElastiCache for Redis** if you need persistence, replication, pub/sub, or sorted sets. Memcached is simpler and marginally faster for pure object caching with no requirement for data recovery.
 
 ---
 
@@ -181,7 +178,6 @@ An EFS file system named `myWPEFS` was created and mounted to **AppSubnet1** and
 
 | Setting | Value |
 |---|---|
-| Automatic backups | Disabled *(lab constraint)* |
 | Mount target AZ-a | AppSubnet1 |
 | Mount target AZ-b | AppSubnet2 |
 | Security Group | `EFSMountTargetSecurityGroup` |
@@ -190,7 +186,7 @@ An EFS file system named `myWPEFS` was created and mounted to **AppSubnet1** and
 
 > **Why EFS instead of instance storage?** Without shared storage, each EC2 instance in an Auto Scaling group would have its own isolated copy of uploaded files. EFS solves this by presenting a single NFS endpoint that all instances mount — uploads made to one instance are immediately visible to all others.
 >
-> **Best practice for your own workloads:** Enable EFS automatic backups in production. Consider EFS Intelligent-Tiering to automatically move infrequently accessed files to a lower-cost storage class.
+> **Best practice for your own workloads:** Enable EFS automatic backups and consider EFS Intelligent-Tiering to automatically move infrequently accessed files to a lower-cost storage class.
 
 ---
 
@@ -232,7 +228,7 @@ Both instances launched in the `InService` state and the target group showed **H
 
 #### The Experiment
 
-An **AWS Fault Injection Simulator** experiment template named `TerminateInstancesinAZ` was created to simulate an Availability Zone outage. The experiment targeted all running EC2 instances tagged `wp-ha-app` in `{LabRegion}a` and terminated them simultaneously.
+An **AWS Fault Injection Simulator** experiment template named `TerminateInstancesinAZ` was created to simulate an Availability Zone outage. The experiment targeted all running EC2 instances tagged `wp-ha-app` in AZ-a and terminated them simultaneously.
 
 **Assumption being tested:**
 > *If AZ-a suffers a complete outage and all EC2 instances in that AZ are terminated, the WordPress application remains available — the ALB reroutes traffic to AZ-b and the ASG launches replacement instances to restore desired capacity.*
@@ -255,23 +251,21 @@ An **AWS Fault Injection Simulator** experiment template named `TerminateInstanc
 
 ### Key Concepts & Best Practices
 
-> **Why we did it this way (lab constraints vs. real world):**
-
-| What we did in the lab | Best practice for your own workloads |
+| What we did | Best practice for your own workloads |
 |---|---|
-| Disabled Aurora encryption | Always enable KMS encryption at rest |
-| Disabled auto minor version upgrade | Enable it — patches are applied during your maintenance window |
-| Disabled deletion protection | Enable it — prevents accidental cluster deletion |
-| Used Memcached | Use Redis if you need replication or persistence |
+| Aurora without encryption | Always enable KMS encryption at rest |
+| Auto minor version upgrade disabled | Enable it — patches are applied during your maintenance window |
+| Deletion protection disabled | Enable it — prevents accidental cluster deletion |
+| Memcached for caching | Use Redis if you need replication or persistence |
 | HTTP only on ALB | Add an HTTPS listener with ACM certificate; redirect HTTP → HTTPS |
-| Disabled EFS automatic backups | Enable AWS Backup for EFS in production |
-| No CloudFront (base lab) | Add CloudFront as a CDN layer to reduce ALB origin load and improve global latency |
+| EFS automatic backups disabled | Enable AWS Backup for EFS in production |
+| No CloudFront | Add CloudFront as a CDN layer to reduce ALB origin load and improve global latency |
 | Single FIS action (terminate) | Combine actions: inject CPU stress, throttle network, terminate — layered chaos gives richer signal |
 | No stop conditions on FIS | Always configure a CloudWatch alarm stop condition (e.g. stop if error rate > 5%) |
 
-**Additional architecture best practices for your future HA workloads:**
+**Additional architecture best practices:**
 
-- ✅ **Use at least 3 AZs** in regions that support it. Two AZs tolerate one AZ failure; three AZs tolerate one AZ failure while still maintaining redundancy in the remainder.
+- ✅ **Use at least 3 AZs** in regions that support it. Two AZs tolerate one AZ failure; three AZs tolerate one while still maintaining redundancy in the remainder.
 - ✅ **Place databases in private subnets only.** Never expose RDS/Aurora to the public internet.
 - ✅ **Decouple storage from compute with EFS or S3.** Stateful EC2 instances cannot scale horizontally without shared storage.
 - ✅ **Set ALB access logging to S3.** Every request hitting the load balancer should be logged for forensics, debugging, and cost attribution.
@@ -292,9 +286,5 @@ An **AWS Fault Injection Simulator** experiment template named `TerminateInstanc
 | **High availability is a design choice, not a feature you add later** | Multi-AZ Aurora, multi-subnet ASG, and cross-AZ ALB had to be configured at creation time. Retrofitting HA onto a single-AZ architecture is expensive and risky. |
 
 ---
-
-> **Completed Labs:**
-> 1. Walkthrough of the AWS Well-Architected Tool — `SPL-CX-100-CEAWAT-1`
-> 2. Building a Highly Available Web Application — `SPL-CX-200-CPHAWA-1`
 
 *All infrastructure was provisioned in a sandboxed AWS account and has since been decommissioned.*
