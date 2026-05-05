@@ -34,6 +34,8 @@ The first project establishes the practice of evaluating architectures using the
 A workload named **"Workload for AnyCompany"** was defined in the AWS Well-Architected Tool, targeting a **Pre-production** environment. The Well-Architected Framework lens was applied to structure the review across all six pillars.
 
 ![Workload Creation](images/lab1-workload-creation.png)
+![Workload Creation](images/lab1-workload-creation2.png)
+
 
 ---
 
